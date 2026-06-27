@@ -1,0 +1,66 @@
+name: Build Chimeric APK
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Cordova
+        run: npm install -g cordova
+
+      - name: Create Cordova project
+        run: |
+          cordova create cordova-app com.chimeric.game "Chimeric"
+          cp index.html cordova-app/www/
+          cp -r icons cordova-app/www/
+          cat > cordova-app/config.xml << 'XML'
+          <?xml version='1.0' encoding='utf-8'?>
+          <widget id="com.chimeric.game" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+            <name>Chimeric</name>
+            <description>Tactical RPG — capture, fuse, and battle procedurally generated monsters</description>
+            <author>Chimeric Team</author>
+            <content src="index.html" />
+            <access origin="*" />
+            <preference name="Fullscreen" value="true" />
+            <preference name="Orientation" value="portrait" />
+            <preference name="DisallowOverscroll" value="true" />
+            <platform name="android">
+              <icon src="www/icons/icon-192.png" density="mdpi" />
+              <icon src="www/icons/icon-192.png" density="hdpi" />
+              <icon src="www/icons/icon-192.png" density="xhdpi" />
+              <icon src="www/icons/icon-512.png" density="xxhdpi" />
+              <icon src="www/icons/icon-512.png" density="xxxhdpi" />
+            </platform>
+          </widget>
+          XML
+
+      - name: Add Android platform
+        run: |
+          cd cordova-app
+          cordova platform add android
+
+      - name: Build APK
+        run: |
+          cd cordova-app
+          cordova build android
+
+      - name: Archive APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: chimeric-debug
+          path: cordova-app/platforms/android/app/build/outputs/apk/debug/*.apk

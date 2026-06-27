@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Chimeric</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1f6feb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0e14;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;user-select:none;-webkit-user-select:none}
+#app{width:100%;height:100%;display:flex;flex-direction:column;position:relative}
+.screen{display:none;width:100%;height:100%;flex-direction:column;position:absolute;top:0;left:0}
+.screen.active{display:flex}
+.btn{padding:10px 16px;border:1px solid #30363d;border-radius:8px;background:#161b22;color:#e6edf3;font-size:14px;cursor:pointer;transition:.15s;text-align:center}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:#1f6feb;border-color:#388bfd}
+.btn.success{background:#238636;border-color:#2ea043}
+.btn.danger{background:#8b1a1a;border-color:#a62a2a}
+.btn.warning{background:#9e6a03;border-color:#bb8009}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+.card{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:12px;margin-bottom:8px}
+.bar-bg{height:8px;background:#21262d;border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .3s}
+.bar-fill.green{background:#2ea043}
+.bar-fill.yellow{background:#d29922}
+.bar-fill.red{background:#da3633}
+.bar-fill.blue{background:#1f6feb}
+
+/* Header */
+#header{padding:8px 12px;background:#161b22;border-bottom:1px solid #21262d;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+#header h1{font-size:16px;font-weight:700}
+#header span{font-size:12px;color:#8b949e}
+
+/* Boss Select */
+#screen-boss-select .boss-grid{padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;overflow-y:auto}
+.boss-card{padding:10px;border-radius:8px;border:1px solid #21262d;background:#161b22;cursor:pointer}
+.boss-card:active{transform:scale(.97)}
+.boss-card .lv{font-size:11px;color:#8b949e}
+.boss-card .name{font-weight:600;font-size:14px;margin:2px 0}
+.boss-card .diff{font-size:11px;margin-top:2px}
+.boss-card .diff.easy{color:#2ea043}
+.boss-card .diff.med{color:#d29922}
+.boss-card .diff.hard{color:#da3633}
+.boss-card .diff.vhard{color:#be4dff}
+
+/* Affinity Table */
+.aff-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;text-align:center;font-size:11px;margin:6px 0}
+.aff-el{font-weight:600;font-size:10px;padding:1px 2px;border-radius:3px}
+.aff-val{font-weight:700;padding:2px 0;border-radius:3px}
+.aff-val.wk{color:#da3633}
+.aff-val.rs{color:#2ea043}
+.aff-val.nl{color:#58a6ff}
+.aff-val.rf{color:#be4dff}
+.aff-val.ne{color:#8b949e;}
+
+/* Battle */
+#screen-battle #battle-top{padding:8px 12px;border-bottom:1px solid #21262d;flex-shrink:0}
+#battle-boss-info{margin-bottom:6px}
+#battle-aff-table{font-size:11px;margin-top:4px}
+.aff-row{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;text-align:center}
+#battle-aff-table .aff-row .aff-el{font-size:10px;padding:1px 2px;border-radius:3px}
+#battle-aff-table .aff-row .aff-val{font-weight:700;font-size:12px;padding:1px 0}
+#battle-aff-table .aff-row .aff-val.wk{color:#da3633}
+#battle-aff-table .aff-row .aff-val.rs{color:#2ea043}
+#battle-aff-table .aff-row .aff-val.nl{color:#58a6ff}
+#battle-aff-table .aff-row .aff-val.rf{color:#be4dff}
+#battle-aff-table .aff-row .aff-val.ne{color:#8b949e}
+.battle-chim .aff-row .aff-el{font-size:8px;padding:1px 2px;border-radius:2px}
+.battle-chim .aff-row{display:grid;grid-template-columns:repeat(8,1fr);gap:1px;text-align:center}
+.battle-chim .aff-row .aff-val{font-weight:600;font-size:9px;padding:1px 0;border-radius:2px}
+
+#battle-party{flex:1;min-height:0;overflow-y:auto;padding:3px 12px}
+.battle-chim{display:flex;align-items:flex-start;gap:0;padding:2px 0;font-size:12px;border-radius:6px;padding-left:0;transition:.15s;margin-bottom:1px}
+.battle-chim.active{background:#1f6feb55;border-left:4px solid #58a6ff;padding-left:8px;padding-right:4px;box-shadow:0 0 16px #1f6feb88,0 0 4px #58a6ff66;border-radius:6px 0 0 6px}
+.battle-chim.active .name{color:#58a6ff}
+.battle-chim.targetable{cursor:pointer;border:1px solid #58a6ff88;border-radius:6px;padding:1px 4px;transition:.1s}
+.battle-chim.targetable:hover{border-color:#58a6ff;background:#1f6feb33}
+.battle-chim.dead{opacity:.5}
+.battle-chim.dead .name{color:#484f58}
+.battle-chim .name{width:60px;font-weight:600;flex-shrink:0}
+
+#battle-log{flex-shrink:0;max-height:65px;overflow-y:auto;padding:4px 12px;font-size:11px;color:#8b949e;border-bottom:1px solid #21262d;border-top:1px solid #21262d}
+#battle-log .log-entry{margin-bottom:2px;padding:2px 6px;background:#0a0e14;border-radius:3px}
+
+#battle-actions{padding:8px 12px;flex-shrink:0;display:flex;flex-direction:column;gap:6px}
+#battle-actions .action-row{display:flex;gap:6px}
+#battle-actions .action-row .btn{flex:1}
+#battle-turn-info{font-size:12px;color:#8b949e;margin-bottom:4px;text-align:center}
+
+/* Victory */
+#screen-victory{padding:20px}
+#screen-victory h2{font-size:22px;text-align:center;margin-bottom:4px}
+#screen-victory .sub{text-align:center;color:#8b949e;font-size:13px;margin-bottom:16px}
+
+/* Fusion */
+#screen-fusion{padding:12px}
+.fusion-options{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+.fusion-preview{margin-bottom:12px}
+.ability-pool{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.ability-pool .ab-tag{font-size:11px;padding:3px 8px;border-radius:4px;background:#21262d;border:1px solid #30363d;cursor:pointer}
+.ability-pool .ab-tag:active{transform:scale(.97)}
+.ability-pool .ab-tag.sel{background:#1f6feb33;border-color:#388bfd}
+
+/* Abandon */
+#screen-abandon{padding:20px}
+.abandon-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0}
+
+/* Manage */
+#screen-manage{padding:12px}
+.manage-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.stat-row{display:flex;align-items:center;gap:4px;margin:2px 0}
+.stat-row label{width:40px;font-size:12px;color:#8b949e}
+.stat-row .stat-val{width:30px;text-align:right;font-size:13px;font-weight:600}
+.stat-row .stat-btn{width:28px;height:28px;border-radius:4px;border:1px solid #30363d;background:#0a0e14;color:#e6edf3;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.stat-row .stat-btn:active{transform:scale(.95)}
+.stat-row .stat-btn:disabled{opacity:.3;cursor:default}
+
+/* Common */
+.header-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#161b22;border-bottom:1px solid #21262d;flex-shrink:0}
+.header-bar h2{font-size:15px}
+.chim-card{font-size:12px}
+.chim-card .name{font-weight:600;font-size:13px}
+.chim-card .stats{color:#8b949e;font-size:11px;margin:2px 0}
+.chim-card .abilities{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.chim-card .abilities .ab-tag{font-size:10px;padding:2px 6px;border-radius:3px;background:#21262d;border:1px solid #30363d}
+.elem-tag{display:inline-block;font-size:10px;padding:1px 5px;border-radius:3px;margin-right:2px}
+.elem-PHY{background:#8b949e33;color:#8b949e}
+.elem-FIR{background:#da363333;color:#da3633}
+.elem-ICE{background:#58a6ff33;color:#58a6ff}
+.elem-LGT{background:#d2992233;color:#d29922}
+.elem-WND{background:#2ea04333;color:#2ea043}
+.elem-LIT{background:#e6edf333;color:#e6edf3}
+.elem-DRK{background:#be4dff33;color:#be4dff}
+.elem-ALM{background:#f0883e33;color:#f0883e}
+.heal{background:#db61a233;color:#db61a2}
+.buff{background:#39d2c033;color:#39d2c0}
+.debuff{background:#bd6c0033;color:#bd6c00}
+.mpcharge{background:#7ee78733;color:#7ee787}
+.revive{background:#ff7b7233;color:#ff7b72}
+#tooltip .tt-title{font-weight:600;font-size:12px;margin-bottom:2px}
+#tooltip .tt-line{color:#8b949e;font-size:10px;margin-top:1px}
+#tooltip .tt-cost{color:#58a6ff}
+#tooltip .tt-dur{color:#d29922}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ===== BOSS SELECT ===== -->
+<div class="screen active" id="screen-boss-select">
+  <div class="header-bar"><h2>Chimeric</h2><span id="hdr-boss-level">Lv 1</span></div>
+  <div class="boss-grid" id="boss-grid"></div>
+  <div style="padding:8px 10px;display:flex;gap:6px;flex-shrink:0">
+    <button class="btn" id="btn-manage" style="flex:1">Manage</button>
+    <button class="btn primary" id="btn-save" style="flex:1">Save/Load</button>
+    <button class="btn warning" id="btn-regenerate" style="flex:1">Regen</button>
+  </div>
+</div>
+
+<!-- ===== STUDY ===== -->
+<div class="screen" id="screen-study">
+  <div class="header-bar"><h2>Study</h2><button class="btn" id="study-back">Back</button></div>
+  <div style="padding:12px;flex:1;overflow-y:auto" id="study-content"></div>
+  <div style="padding:8px 12px;display:flex;gap:6px;flex-shrink:0">
+    <button class="btn primary" id="study-fight" style="flex:1">Fight</button>
+  </div>
+</div>
+
+<!-- ===== BATTLE ===== -->
+<div class="screen" id="screen-battle">
+  <div id="battle-top">
+    <div id="battle-boss-info">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span id="bat-boss-name" style="font-weight:600;font-size:14px"></span>
+        <span id="bat-boss-hp" style="font-size:12px;color:#8b949e"></span>
+      </div>
+      <div class="bar-bg" style="margin-top:2px;height:10px"><div class="bar-fill red" id="bat-boss-hp-bar" style="width:100%"></div></div>
+    </div>
+    <div id="battle-aff-table"><div id="bat-aff-row"></div></div>
+  </div>
+  <div id="bat-target-panel" style="display:none;padding:6px 12px;flex-shrink:0;border-bottom:1px solid #21262d"></div>
+  <div id="battle-party"></div>
+  <div id="battle-log"></div>
+  <div id="battle-actions">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div id="battle-turn-info">Turn 1</div>
+      <button class="btn warning" id="btn-flee" style="font-size:11px;padding:4px 12px">Flee</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VICTORY ===== -->
+<div class="screen" id="screen-victory">
+  <div style="padding:20px;flex:1;display:flex;flex-direction:column;justify-content:center">
+    <h2 style="font-size:24px;text-align:center;color:#2ea043">Victory!</h2>
+    <p style="text-align:center;color:#8b949e;margin:4px 0 16px" id="vic-boss-name"></p>
+    <div id="vic-level-ups" style="margin-bottom:16px"></div>
+    <p style="text-align:center;color:#e6edf3;margin-bottom:16px">The boss joins your party! (5 Chim)</p>
+    <div id="vic-5-chim" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn primary" id="vic-fuse" style="flex:1">Fuse</button>
+      <button class="btn danger" id="vic-abandon" style="flex:1">Abandon</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FUSION ===== -->
+<div class="screen" id="screen-fusion">
+  <div class="header-bar"><h2>Fusion</h2><button class="btn" id="fusion-cancel">Cancel</button></div>
+  <div style="padding:12px;flex:1;overflow-y:auto">
+    <p style="font-size:12px;color:#8b949e;margin-bottom:8px">Select 2 Chim to fuse:</p>
+    <div class="fusion-options" id="fusion-grid"></div>
+    <div id="fusion-preview" style="display:none">
+      <div class="card" id="fusion-result-card"></div>
+      <p style="font-size:12px;color:#8b949e;margin:8px 0 4px">Choose abilities to inherit (max 8):</p>
+      <div class="ability-pool" id="fusion-abilities"></div>
+    </div>
+  </div>
+  <div style="padding:8px 12px;display:flex;gap:6px;flex-shrink:0">
+    <button class="btn success" id="fusion-confirm" style="flex:1" disabled>Confirm Fusion</button>
+  </div>
+</div>
+
+<!-- ===== ABANDON ===== -->
+<div class="screen" id="screen-abandon">
+  <div class="header-bar"><h2>Abandon</h2><button class="btn" id="abandon-cancel">Cancel</button></div>
+  <div style="padding:12px;flex:1;overflow-y:auto">
+    <p style="font-size:12px;color:#8b949e;margin-bottom:8px">Choose a Chim to release:</p>
+    <div class="abandon-grid" id="abandon-grid"></div>
+  </div>
+  <div style="padding:8px 12px;display:flex;gap:6px;flex-shrink:0">
+    <button class="btn danger" id="abandon-confirm" disabled style="flex:1">Confirm Release</button>
+  </div>
+</div>
+
+<!-- ===== MANAGE ===== -->
+<div class="screen" id="screen-manage">
+  <div class="header-bar"><h2>Manage</h2><button class="btn" id="manage-back">Back</button></div>
+  <div style="padding:12px;flex:1;overflow-y:auto">
+    <div class="manage-list" id="manage-list"></div>
+  </div>
+</div>
+
+<!-- ===== SAVE/LOAD ===== -->
+<div class="screen" id="screen-save">
+  <div class="header-bar"><h2>Save / Load</h2><button class="btn" id="save-back">Back</button></div>
+  <div style="padding:12px;flex:1;overflow-y:auto">
+    <p style="font-size:12px;color:#8b949e;margin-bottom:8px">10 save slots — click Save to overwrite, click Load to restore.</p>
+    <div id="save-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px"></div>
+  </div>
+</div>
+
+</div><!-- /app -->
+<div id="tooltip" style="display:none;position:fixed;z-index:9999;pointer-events:none;max-width:260px;padding:8px 10px;border-radius:6px;background:#161b22;border:1px solid #30363d;box-shadow:0 4px 12px #00000066;font-size:11px;line-height:1.4;color:#e6edf3"></div>
+<script>
+// ════════════════════════════════════════════════════════════
+// CHIMERIC — tactical RPG
+// ════════════════════════════════════════════════════════════
+
+// ─── CONSTANTS ───
+const ELEMENTS = ['PHY','FIR','ICE','LGT','WND','LIT','DRK','ALM'];
+const AFFINITY_LABELS = { wk:'Wk', rs:'Rs', nl:'Nl', rf:'Rf', ne:'—' };
+const AFFINITY_MULT = { wk:2.5, rs:0.5, nl:0, rf:-1, ne:1 };
+const ELEM_COLORS = { PHY:'#8b949e', FIR:'#da3633', ICE:'#58a6ff', LGT:'#d29922', WND:'#2ea043', LIT:'#e6edf3', DRK:'#be4dff', ALM:'#f0883e' };
+
+const NAME_SYLS = ['ag','al','am','an','ar','as','az','ba','be','bi','bo','br','ca','ce','ci','co','cr','da','de','di','do','dr','el','em','en','er','es','ex','fa','fe','fi','fo','ga','ge','gi','go','gr','ha','he','hi','ho','ig','il','im','in','ir','is','iv','ja','je','ji','jo','ka','ke','ki','ko','la','le','li','lo','lu','ma','me','mi','mo','mu','na','ne','ni','no','nu','ol','om','on','or','os','ox','pa','pe','pi','po','qu','ra','re','ri','ro','ru','sa','se','si','so','ta','te','ti','to','tr','ul','um','un','ur','us','ux','va','ve','vi','vo','xa','xe','xi','xo','za','ze','zi','zo'];
+const ABIL_SYLS = ['ag','al','am','an','ar','az','ba','be','bi','bo','ca','ce','ci','co','da','de','di','do','el','em','en','er','es','fa','fe','fi','ga','ge','gi','go','ha','he','hi','ho','ig','il','im','in','ir','is','iv','ja','je','ka','ke','ki','ko','la','le','li','lo','lu','ma','me','mi','mo','mu','na','ne','ni','no','ol','om','on','or','os','pa','pe','pi','po','ra','re','ri','ro','ru','sa','se','si','so','ta','te','ti','to','ul','um','un','ur','us','va','ve','vi','vo','xa','ze','zi','zo'];
+const ABIL_PREFIX = ['','','','','Mega','Giga','Hyper','Ultra','Turbo','Xeno','Cryo','Pyro','Thaum','Phas','Chron','Eldr'];
+const BOSS_NAMES = ['Zagan','Valac','Gamigin','Barbatos','Botis','Bathin','Purson','Morax','Leraje','Naberius','Glasya','Forneus','Ronove','Berith','Astaroth','Furfur','Marchosias','Stolas','Phenex','Halphas','Malphas','Raum','Vine','Decarabia','Seere','Dantalion','Andromalius','Cimeies','Amdusias','Belial','Orobas','Gusion','Sabnock','Gaap','Alloces','Caim','Murmur','Orias','Vapula','Zepar','Sytry','Bune','Flauros','Andras','Andrealphus','Cimeies','Amy','Ose','Agares','Vassago'];
+
+// ─── TOOLTIP ───
+function showTooltip(e,html){
+  const el=e.target.closest('[data-abil-obj]')||e.target;
+  const tt=document.getElementById('tooltip');
+  tt.innerHTML=html;tt.style.display='block';
+  const rect=el.getBoundingClientRect();
+  let top=rect.top-tt.offsetHeight-8,left=rect.left+(rect.width-tt.offsetWidth)/2;
+  if(top<4)top=rect.bottom+8;
+  if(left<4)left=4;
+  if(left+tt.offsetWidth>window.innerWidth-4)left=window.innerWidth-tt.offsetWidth-4;
+  tt.style.top=top+'px';tt.style.left=left+'px';
+}
+function hideTooltip(){document.getElementById('tooltip').style.display='none';}
+
+// ─── DAMAGE PREVIEW ───
+function calcDamagePreview(ability,attacker,target){
+  if(ability.type!=='damage'&&ability.type!=='attack')return null;
+  if(!target||!attacker)return null;
+  const isPhysical=ability.element==='PHY';
+  const power=ability.type==='attack'?8:ability.power;
+  const stat=isPhysical?attacker.ATK:attacker.MAG;
+  let atkMult=getBuffMultiplier(attacker,isPhysical?'ATK':'MAG');
+  let defMult=getBuffMultiplier(target,isPhysical?'DEF':'MDF');
+  const eab=attacker.buffs?.find(b=>b.element===ability.element);
+  if(eab)atkMult*=eab.mult;
+  const edb=target.buffs?.find(b=>b.element===ability.element);
+  if(edb)defMult*=edb.mult;
+  let dmg=Math.round(power*(1+stat*0.015)*atkMult/defMult);
+  const aff=target.affinities[ability.element];
+  let lab='';
+  if(aff==='wk'){dmg=Math.round(dmg*2.5);lab='Wk!';}
+  else if(aff==='rs'){dmg=Math.round(dmg*.5);lab='Rs';}
+  else if(aff==='nl'){dmg=0;lab='Nl';}
+  else if(aff==='rf'){lab='Rf';dmg=0;}
+  if(target.guard&&dmg>0){dmg=Math.round(dmg*.5);lab=lab?lab+'+Grd':'Grd';}
+  return{dmg,lab,power};
+}
+function calcAbilityPreview(ability,attacker,target){
+  if(ability.type==='damage'||ability.type==='attack')return calcDamagePreview(ability,attacker,target);
+  let info='';
+  if(ability.type==='heal'){const h=Math.round(ability.power*(1+(attacker?.MAG||0)*0.015));info=`${h} HP`;}
+  else if(ability.type==='mpcharge')info=`+${ability.restore} MP`;
+  else if(ability.type==='revive')info=`${ability.power}%+${ability.mpRestore}MP`;
+  else if(ability.type==='buff'){const s=ability.element?`${ability.element}`:ability.stat;info=`+${Math.round((ability.mult-1)*100)}% ${s} ${ability.duration>=999?'∞':ability.duration+'t'}`;}
+  else if(ability.type==='debuff'){const s=ability.element?`${ability.element}`:ability.stat;info=`${Math.round((ability.mult-1)*100)}% ${s} ${ability.duration>=999?'∞':ability.duration+'t'}`;}
+  return{info};
+}
+
+// ─── UNIFIED SKILL GRID ───
+function renderSkillGrid(entity,opts={}){
+  const{chimIdx=-1,isActive=false,showAttackGuard=false,target=null,onClick=null,costMult=1}=opts;
+  const emp='display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 2px;border-radius:5px;font-size:10px;line-height:1.2;overflow:hidden';
+  const d=!isActive?'disabled':'';const io=isActive?'1':'.9';
+  let h='<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:3px">';
+  if(showAttackGuard){
+    const ab={type:'attack',element:'PHY',name:'Attack',cost:0};
+    const abEnc=encodeURIComponent(JSON.stringify(ab));
+    let pv='';
+    if(target){const p=calcAbilityPreview(ab,entity,target);if(p&&p.dmg!==undefined)pv=`<span style="font-size:8px;color:${p.lab==='Wk!'?'#2ea043':p.lab?p.lab==='Rf'?'#be4dff':'#d29922':'#8b949e'}">${p.dmg} ${p.lab||''}</span>`;}
+    if(!pv)pv='<span style="font-size:8px;color:#484f58">PHY</span>';
+    h+=`<button class="bat-attack-btn" data-chim="${chimIdx}" data-abil-obj="${abEnc}" ${d} style="${emp};border:1px solid #30363d;background:#161b22;color:#e6edf3;cursor:${isActive?'pointer':'default'};opacity:${io}"><span style="font-size:14px">&#9876;</span><span style="font-size:9px">Attack</span>${pv}</button>`;
+    const gbEnc=encodeURIComponent(JSON.stringify({type:'guard',name:'Guard',cost:0}));
+    h+=`<button class="bat-guard-btn" data-chim="${chimIdx}" data-abil-obj="${gbEnc}" ${d} style="${emp};border:1px solid #30363d;background:#161b22;color:#e6edf3;cursor:${isActive?'pointer':'default'};opacity:${io}"><span style="font-size:14px">&#128737;</span><span style="font-size:9px">Guard</span><span style="font-size:8px;color:#8b949e">-50% 1t</span></button>`;
+  }
+  for(let ai=0;ai<entity.abilities.length&&ai<8;ai++){
+    const a=entity.abilities[ai];const cost=a.cost||0;const ac=isActive&&(entity.MP||0)>=cost*Math.max(1,costMult);
+    const op=isActive?(ac?'1':'.4'):'.6';
+    const cls=a.type==='damage'?`elem-${a.element}`:a.type;
+    let info='';
+    if(a.type==='damage')info=`${a.power}`;
+    else if(a.type==='heal')info=`${a.power}`;
+    else if(a.type==='mpcharge')info=`+${a.restore}`;
+    else if(a.type==='revive')info=`${a.power}% ${a.mpRestore}MP`;
+    else if(a.type==='buff'){if(a.element)info=`+${Math.round((a.mult-1)*100)}%`;else info=`+${Math.round((a.mult-1)*100)}% ${a.stat}`;}
+    else if(a.type==='debuff'){if(a.element)info=`${Math.round((a.mult-1)*100)}% ${a.element}`;else info=`${Math.round((a.mult-1)*100)}% ${a.stat}`;}
+    const badge=a.type==='damage'?a.element:a.type==='heal'?'HEAL':a.type==='mpcharge'?'MP':a.type==='revive'?'RIV':a.type==='buff'?'BF':'DB';
+    const abEnc=encodeURIComponent(JSON.stringify(a));
+    let pv='';
+    if(target){
+      const p=calcAbilityPreview(a,entity,target);
+      if(p){
+        if(p.dmg!==undefined)pv=`<span style="font-size:8px;color:${p.lab==='Wk!'?'#2ea043':p.lab?p.lab==='Rf'?'#be4dff':'#d29922':'#8b949e'}">${p.dmg} ${p.lab||''}</span>`;
+        else pv=`<span style="font-size:8px;color:#7ee787">${p.info}</span>`;
+      }
+    }
+    h+=`<button class="bat-skill-btn" data-chim="${chimIdx}" data-abil="${ai}" data-abil-obj="${abEnc}" ${ac?'':'disabled'} style="${emp};border:1px solid ${ac?'#30363d':'#21262d'};background:#0a0e14;color:#e6edf3;cursor:${ac?'pointer':'default'};opacity:${op}"><span class="${cls}" style="padding:1px 6px;border-radius:2px;font-weight:700;font-size:8px">${badge}</span><span style="font-weight:500;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${a.name}</span><span style="color:#8b949e;font-size:8px">${pv?pv+' · ':''}${info} ${cost}MP</span></button>`;
+  }
+  const total=showAttackGuard?10:8;const filled=(showAttackGuard?2:0)+Math.min(entity.abilities.length,8);
+  for(let e=filled;e<total;e++)h+='<div></div>';
+  h+='</div>';return h;
+}
+
+// ─── GUARD / ATTACK TOOLTIPS ───
+function abTooltipHTML(a){
+  if(a.type==='attack')return`<div class="tt-title">Attack</div><div class="tt-line" style="opacity:.7">Physical damage</div><div class="tt-line">Base power: 8 · Element: PHY</div><div class="tt-line">Scales with ATK vs target DEF</div><div class="tt-line tt-cost">0 MP</div>`;
+  if(a.type==='guard')return`<div class="tt-title">Guard</div><div class="tt-line" style="opacity:.7">Defensive stance</div><div class="tt-line">Reduces incoming damage by 50%</div><div class="tt-line">Lasts 1 turn or until hit</div><div class="tt-line tt-cost">0 MP</div>`;
+  let lines='';
+  if(a.type==='damage'){lines=`<div class="tt-line">Element: ${a.element} · Power: ${a.power}</div>`;}
+  else if(a.type==='heal'){lines=`<div class="tt-line">Restores ${a.power} HP (scales with MAG)</div>`;}
+  else if(a.type==='mpcharge'){lines=`<div class="tt-line">Restores ${a.restore} MP</div>`;}
+  else if(a.type==='revive'){lines=`<div class="tt-line">Revives with ${a.power}% HP + ${a.mpRestore} MP</div>`;}
+  else if(a.type==='buff'){
+    if(a.element)lines=`<div class="tt-line">+${Math.round((a.mult-1)*100)}% ${a.element} damage · ${a.duration>=999?'Permanent':a.duration+' turns'}</div>`;
+    else lines=`<div class="tt-line">+${Math.round((a.mult-1)*100)}% ${a.stat} · ${a.duration>=999?'Permanent':a.duration+' turns'}</div>`;
+  }else if(a.type==='debuff'){
+    if(a.element)lines=`<div class="tt-line">${Math.round((a.mult-1)*100)}% ${a.element} resistance · ${a.duration>=999?'Permanent':a.duration+' turns'}</div>`;
+    else lines=`<div class="tt-line">${Math.round((a.mult-1)*100)}% ${a.stat} · ${a.duration>=999?'Permanent':a.duration+' turns'}</div>`;
+  }
+  lines+=`<div class="tt-line tt-cost">${a.cost||0} MP</div>`;
+  return `<div class="tt-title">${a.name}</div><div class="tt-line" style="opacity:.7">${a.type.charAt(0).toUpperCase()+a.type.slice(1)}</div>${lines}`;
+}
+
+document.addEventListener('mouseover',e=>{
+  const el=e.target.closest('[data-abil-obj]');
+  if(!el)return;
+  try{
+    const a=JSON.parse(decodeURIComponent(el.dataset.abilObj));
+    showTooltip(e,abTooltipHTML(a));
+  }catch(_){}
+});
+document.addEventListener('mouseout',e=>{
+  if(e.target.closest('[data-abil-obj]')&&!e.relatedTarget?.closest('[data-abil-obj]'))hideTooltip();
+});
+
+// ─── NAME GEN ───
+function genName(syls,n){
+  let s='';
+  for(let i=0;i<(n||2+Math.floor(Math.random()*2));i++)s+=syls[Math.floor(Math.random()*syls.length)];
+  return s.charAt(0).toUpperCase()+s.slice(1);
+}
+function genChimName(){return genName(NAME_SYLS,2+Math.floor(Math.random()*2))}
+function genAbilityName(){return Math.random()<.3?ABIL_PREFIX[Math.floor(Math.random()*ABIL_PREFIX.length)]+genName(ABIL_SYLS,1+Math.random()*2|0):genName(ABIL_SYLS,2+Math.random()*2|0)}
+
+function genBossName(){return BOSS_NAMES[Math.floor(Math.random()*BOSS_NAMES.length)]}
+
+// ─── AFFINITY GEN ───
+function genAffinities(theme){
+  const aff={}; const used={};
+  const pool=ELEMENTS.slice();
+  const assign=(type)=>{
+    if(used[type]||!pool.length)return;
+    const i=Math.floor(Math.random()*pool.length);
+    aff[pool[i]]=type; used[type]=true; pool.splice(i,1);
+  };
+  // Theme element: 45% rs, 20% nl, 15% rf, 20% ne
+  if(theme){
+    const ti=pool.indexOf(theme);
+    if(ti>=0){
+      const r=Math.random();
+      let t=r<.45?'rs':r<.65?'nl':r<.8?'rf':null;
+      if(t){aff[theme]=t;used[t]=true;} pool.splice(ti,1);
+    }
+  }
+  // 90% → 2 mods (wk+rs), 10% → 3 mods (wk+rs+nl/rf)
+  const hasBonus=Math.random()<.1;
+  if(!used.wk)assign('wk');
+  if(!used.rs)assign('rs');
+  if(hasBonus){
+    const bt=['nl','rf'].filter(t=>!used[t]);
+    if(bt.length>0)assign(bt[Math.floor(Math.random()*bt.length)]);
+  }
+  for(const el of pool)aff[el]=aff[el]||'ne';
+  return aff;
+}
+function oppositeElement(el){const m={PHY:'ALM',FIR:'ICE',ICE:'FIR',LGT:'WND',WND:'LGT',LIT:'DRK',DRK:'LIT',ALM:'PHY'};return m[el]||'PHY'}
+
+// ─── ABILITY GEN ───
+const ABIL_TYPES = ['damage','damage','damage','damage','buff','debuff','heal','mpcharge','revive'];
+
+function genAbility(level, forceType){
+  const type=forceType||ABIL_TYPES[Math.floor(Math.random()*ABIL_TYPES.length)];
+  const name=genAbilityName();
+  if(type==='heal'){
+    const power=12+level*4+Math.floor(Math.random()*12);
+    return{name,type:'heal',power,cost:Math.max(2,Math.round(power/8)+Math.floor(Math.random()*3)-1),target:'single'};
+  }
+  if(type==='mpcharge'){
+    const cost=2+Math.floor(Math.random()*3);
+    const restore=Math.round(cost*1.2+Math.random()*cost);
+    return{name,type:'mpcharge',cost,restore,target:'single'};
+  }
+  if(type==='revive'){
+    const power=25+Math.floor(Math.random()*4)*25; // 25, 50, 75, 100
+    const mpRestore=Math.floor(Math.random()*31)+10; // 10-40
+    const cost=12+Math.floor(Math.random()*9); // 12-20
+    return{name,type:'revive',power,mpRestore,cost,target:'single'};
+  }
+  if(type==='buff'||type==='debuff'){
+    const isBuff=type==='buff';
+    if(Math.random()<.4){
+      const element=ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)];
+      const mult=isBuff?1.2+Math.random()*.2:.65+Math.random()*.25;
+      const duration=Math.random()<.1?999:2+Math.floor(Math.random()*4);
+      const cost=4+Math.floor(Math.random()*4);
+      return{name,type,element,mult:Math.round(mult*100)/100,duration,cost,target:isBuff?'party':'enemy'};
+    }
+    const stats=['ATK','MAG','DEF','MDF'];
+    const stat=stats[Math.floor(Math.random()*stats.length)];
+    const mult=isBuff?1.15+Math.random()*.3:.6+Math.random()*.3;
+    const duration=Math.random()<.12?999:2+Math.floor(Math.random()*4);
+    const cost=4+Math.floor(Math.random()*4);
+    return{name,type,stat,mult:Math.round(mult*100)/100,duration,cost,target:isBuff?'party':'enemy'};
+  }
+  // Damage
+  const element=ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)];
+  const power=8+level*6+Math.floor(Math.random()*15);
+  const cost=Math.max(1,Math.round(power/9)+Math.floor(Math.random()*3)-1);
+  return{name,element,type:'damage',power,cost,target:'single'};
+}
+
+// ─── CHIM GEN ───
+let nextId=1;
+
+function genBaseStats(level){
+  return{
+    maxHP:35+level*5+Math.floor(Math.random()*10),
+    maxMP:12+level*3+Math.floor(Math.random()*6),
+    ATK:4+level*1.2|0,
+    MAG:4+level*1.2|0,
+    DEF:3+level*1.1|0,
+    MDF:3+level*1.1|0,
+    SPD:3+level*1.1|0,
+  };
+}
+
+function createChim(level,traits){
+  const id=nextId++;
+  const base=genBaseStats(level);
+  const assigned=traits&&traits.assigned?{...traits.assigned}:{};
+  const chim={
+    id,name:traits&&traits.name?traits.name:genChimName(),
+    level:level||1,
+    maxHP:base.maxHP+(assigned.HP||0)*4,
+    HP:base.maxHP+(assigned.HP||0)*4,
+    maxMP:base.maxMP+(assigned.MP||0)*2,
+    MP:base.maxMP+(assigned.MP||0)*2,
+    ATK:base.ATK+(assigned.ATK||0),
+    MAG:base.MAG+(assigned.MAG||0),
+    DEF:base.DEF+(assigned.DEF||0),
+    MDF:base.MDF+(assigned.MDF||0),
+    SPD:base.SPD+(assigned.SPD||0),
+    assigned:{...assigned},
+    base:{...base},
+    unspent:(traits&&traits.unspent)||0,
+    abilities:traits&&traits.abilities?[...traits.abilities]:[],
+    affinities:traits&&traits.affinities?{...traits.affinities}:genAffinities(),
+    xp:traits&&traits.xp||0,
+    xpNext:20+level*8,
+    buffs:[],
+    guard:false,
+  };
+  // Ensure 4 abilities
+  while(chim.abilities.length<4)chim.abilities.push(genAbility(chim.level));
+  // Trim to 8
+  if(chim.abilities.length>8)chim.abilities=chim.abilities.slice(0,8);
+  return chim;
+}
+
+// ─── BOSS GEN ───
+const DIFF_LEVELS=[{key:'easy',label:'Easy',mult:.85,color:'#2ea043'},{key:'easy',label:'Easy',mult:.95,color:'#2ea043'},{key:'med',label:'Medium',mult:1.05,color:'#d29922'},{key:'med',label:'Medium',mult:1.1,color:'#d29922'},{key:'med',label:'Medium',mult:1.15,color:'#d29922'},{key:'med',label:'Medium',mult:1.2,color:'#d29922'},{key:'hard',label:'Hard',mult:1.35,color:'#da3633'},{key:'hard',label:'Hard',mult:1.5,color:'#da3633'},{key:'vhard',label:'Very Hard',mult:1.8,color:'#be4dff'},{key:'vhard',label:'Very Hard',mult:2.2,color:'#be4dff'}];
+
+function genBoss(teamLevel,mult){
+  const lv=Math.max(1,Math.round(teamLevel*mult));
+  const name=genBossName();
+  const theme=ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)];
+  const base=genBaseStats(lv);
+  const bossHpMult=2.5;
+  const statMult=1.3;
+  const boss={
+    name,level:lv,
+    maxHP:Math.round(base.maxHP*bossHpMult),
+    HP:Math.round(base.maxHP*bossHpMult),
+    maxMP:Math.round(base.maxMP*1.5),
+    MP:Math.round(base.maxMP*1.5),
+    ATK:Math.round(base.ATK*statMult),
+    MAG:Math.round(base.MAG*statMult),
+    DEF:Math.round(base.DEF*statMult),
+    MDF:Math.round(base.MDF*statMult),
+    SPD:Math.round(base.SPD*statMult),
+    affinities:genAffinities(theme),
+    abilities:[],
+    guard:false,
+    buffs:[],
+  };
+  // Generate 4-6 abilities
+  const nAb=4+Math.floor(Math.random()*3);
+  const hasBuff=boss.abilities.some(a=>a.type==='buff'||a.type==='debuff');
+  for(let i=0;i<nAb;i++){
+    const forceType=i===0?'damage':null;
+    const ab=genAbility(lv,forceType);
+    // Ensure at least 1 thematic ability
+    if(i<2&&ab.type==='damage')ab.element=theme;
+    boss.abilities.push(ab);
+  }
+  // Ensure at least one buff/debuff
+  if(!boss.abilities.some(a=>a.type==='buff'||a.type==='debuff')&&lv>=2)
+    boss.abilities.push(genAbility(lv,Math.random()<.5?'buff':'debuff'));
+  return boss;
+}
+
+// ─── GAME STATE ───
+const G={
+  party:[],       // 4 Chim
+  bosses:[],      // 10 bosses
+  defeatedBosses:0,
+  totalLevel:1,
+  battleState:null, // current battle state
+  fusionState:null,
+  vicBoss:null,
+};
+
+// ─── SCREENS ───
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── STARTUP ───
+function startGame(){
+  G.party=[];
+  for(let i=0;i<4;i++){
+    const chim=createChim(1);
+    while(chim.abilities.length<4)chim.abilities.push(genAbility(1));
+    if(chim.abilities.length>4)chim.abilities=chim.abilities.slice(0,4);
+    G.party.push(chim);
+  }
+  generateBosses();
+  renderBossSelect();
+  updateHeader();
+  showScreen('screen-boss-select');
+}
+
+function updateTotalLevel(){
+  G.totalLevel=Math.max(1,G.party.reduce((s,c)=>s+c.level,0)/G.party.length|0);
+}
+function generateBosses(){
+  updateTotalLevel();
+  G.bosses=[];
+  const tl=G.totalLevel;
+  for(const d of DIFF_LEVELS){
+    G.bosses.push(genBoss(tl,d.mult));
+  }
+}
+
+// ─── HEADER ───
+function updateHeader(){
+  const tl=G.party.reduce((s,c)=>s+c.level,0)/G.party.length|0;
+  document.getElementById('hdr-boss-level').textContent=`Avg Lv ${tl}`;
+}
+
+// ─── RENDER BOSS SELECT ───
+function renderBossSelect(){
+  const grid=document.getElementById('boss-grid');
+  grid.innerHTML='';
+  for(let i=0;i<G.bosses.length;i++){
+    const b=G.bosses[i];
+    const diff=DIFF_LEVELS[i];
+    const card=document.createElement('div');
+    card.className='boss-card';
+    card.innerHTML=`
+      <div class="lv">Lv ${b.level}</div>
+      <div class="name">${b.name}</div>
+      <div class="diff ${diff.key}">${diff.label}</div>
+    `;
+    card.addEventListener('click',()=>openStudy(i));
+    grid.appendChild(card);
+  }
+  updateHeader();
+}
+
+// ─── ABILITY TAG HTML ───
+function abTagHTML(a){
+  let cls='',info='',badge='';
+  if(a.type==='damage'){cls=`elem-${a.element}`;badge=a.element;info=`${a.power}pwr`;}
+  else if(a.type==='heal'){cls='heal';badge='HEAL';info=`${a.power}heal`;}
+  else if(a.type==='mpcharge'){cls='mpcharge';badge='MP';info=`+${a.restore}MP`;}
+  else if(a.type==='revive'){cls='revive';badge='RIV';info=`${a.power}% ${a.mpRestore}MP`;}
+  else if(a.type==='buff'){
+    cls='buff';badge='BUFF';
+    if(a.element)info=`+${Math.round((a.mult-1)*100)}% ${a.element} ${a.duration>=999?'∞':a.duration+'t'}`;
+    else{const s=a.stat==='ATK'?'ATK(PHY)':a.stat==='MAG'?'MAG(MAG)':a.stat==='DEF'?'DEF(PHY)':'MDF(MAG)';info=`+${Math.round((a.mult-1)*100)}% ${s} ${a.duration>=999?'∞':a.duration+'t'}`;}
+  }else{
+    cls='debuff';badge='DEBUFF';
+    if(a.element)info=`${Math.round((a.mult-1)*100)}% ${a.element} ${a.duration>=999?'∞':a.duration+'t'}`;
+    else{const s=a.stat==='ATK'?'ATK(PHY)':a.stat==='MAG'?'MAG(MAG)':a.stat==='DEF'?'DEF(PHY)':'MDF(MAG)';info=`${Math.round((a.mult-1)*100)}% ${s} ${a.duration>=999?'∞':a.duration+'t'}`;}
+  }
+  const abilEnc=encodeURIComponent(JSON.stringify(a));
+  return `<span data-abil-obj="${abilEnc}" style="display:inline-flex;align-items:center;gap:4px;margin:2px;padding:4px 8px;border-radius:5px;background:#0a0e14;border:1px solid #30363d;font-size:12px;white-space:nowrap"><span class="${cls}" style="padding:1px 5px;border-radius:3px;font-weight:700;font-size:10px">${badge}</span><span style="font-weight:500">${a.name}</span><span style="color:#8b949e">${info}</span><span style="color:#58a6ff">${a.cost||0}MP</span></span>`;
+}
+
+// ─── AFFINITY TABLE HTML ───
+const EL_DESC={PHY:'Physical',FIR:'Fire',ICE:'Ice',LGT:'Light',WND:'Wind',LIT:'Lightning',DRK:'Dark',ALM:'Almighty'};
+const AFF_DESC={wk:'Weak — ×2.5 damage taken',rs:'Resist — ×0.5 damage taken',nl:'Null — 0 damage taken',rf:'Reflect — damage reflected to attacker',ne:'Neutral — ×1.0 damage taken'};
+function affTableHTML(affinities){
+  let h='<div class="aff-row">';
+  for(const el of ELEMENTS)h+=`<div class="aff-el elem-${el}" title="${EL_DESC[el]}">${el}</div>`;
+  h+='</div><div class="aff-row">';
+  for(const el of ELEMENTS){
+    const v=affinities[el]||'ne';
+    h+=`<div class="aff-val ${v}" title="${AFF_DESC[v]}">${AFFINITY_LABELS[v]}</div>`;
+  }
+  h+='</div>';
+  return h;
+}
+
+// ─── STUDY ───
+let studyIdx=0;
+
+function openStudy(idx){
+  studyIdx=idx;
+  const b=G.bosses[idx];
+  const diff=DIFF_LEVELS[idx];
+  const el=document.getElementById('study-content');
+  const sg=renderSkillGrid(b,{showAttackGuard:false});
+  el.innerHTML=`
+    <div class="card">
+      <div style="font-size:18px;font-weight:700">${b.name}</div>
+      <div style="color:#8b949e;font-size:13px">Lv ${b.level} · ${diff.label}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:8px;font-size:12px">
+        <div>HP ${b.maxHP}</div><div>MP ${b.maxMP}</div><div>SPD ${b.SPD}</div>
+        <div>ATK ${b.ATK}</div><div>MAG ${b.MAG}</div><div></div>
+        <div>DEF ${b.DEF}</div><div>MDF ${b.MDF}</div><div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:12px;color:#8b949e;margin-bottom:4px">Affinities</div>
+      ${affTableHTML(b.affinities)}
+    </div>
+    <div class="card">
+      <div style="font-size:12px;color:#8b949e;margin-bottom:4px">Abilities</div>
+      ${sg||'<span style="color:#484f58;font-size:12px">None</span>'}
+    </div>
+  `;
+  document.getElementById('study-fight').onclick=()=>startBattle(idx);
+  showScreen('screen-study');
+}
+
+document.getElementById('study-back').addEventListener('click',()=>{renderBossSelect();showScreen('screen-boss-select')});
+
+// ─── BATTLE ───
+function startBattle(bossIdx){
+  const boss=G.bosses[bossIdx];
+  const chim=G.party.map(c=>({...c,HP:c.HP,MP:c.MP,buffs:[],guard:false}));
+  // Reset buffs on party
+  for(const c of G.party){c.buffs=[];c.guard=false;}
+  G.battleState={
+    boss:{...boss,HP:boss.HP,MP:boss.MP,buffs:[],guard:false},
+    chimIdx:G.party.map((c,i)=>i),
+    turn:1,
+    phase:'start',
+    current:0,
+    activeChim:null,
+    log:[],
+    finished:false,
+    bossIdx,
+  };
+  renderBattle();
+  showScreen('screen-battle');
+  setTimeout(startNextActor,300);
+}
+
+function getBattleOrder(){
+  const bs=G.battleState;
+  const order=[];
+  for(const i of bs.chimIdx)if(G.party[i].HP>0)order.push({type:'chim',idx:i,spd:G.party[i].SPD});
+  if(bs.boss.HP>0)order.push({type:'boss',idx:-1,spd:bs.boss.SPD});
+  order.sort((a,b)=>b.spd-a.spd);
+  return order;
+}
+
+function renderBattle(activeIdx){
+  try{
+  if(activeIdx===undefined)activeIdx=G.battleState?.activeChim;
+  const bs=G.battleState;
+  const boss=bs.boss;
+  // Boss info + stats + skills
+  const bossSkillGrid=renderSkillGrid(boss,{showAttackGuard:false});
+  document.getElementById('battle-top').innerHTML=`
+    <div id="battle-boss-info">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:600;font-size:14px">${boss.name} Lv${boss.level}</span>
+        <span style="font-size:12px;color:#e6edf3">${boss.HP}/${boss.maxHP}</span>
+      </div>
+      <div class="bar-bg" style="margin-top:2px;height:10px"><div class="bar-fill red" style="width:${boss.HP/boss.maxHP*100}%"></div></div>
+      <div style="display:flex;gap:6px;font-size:10px;color:#8b949e;margin:3px 0">
+        <span>ATK ${boss.ATK}</span><span>MAG ${boss.MAG}</span><span>DEF ${boss.DEF}</span><span>MDF ${boss.MDF}</span><span>SPD ${boss.SPD}</span>
+      </div>
+    </div>
+    <div id="battle-aff-table">${affTableHTML(boss.affinities)}</div>
+    ${bossSkillGrid}
+  `;
+  // Party with inline actions
+  const partyEl=document.getElementById('battle-party');
+  partyEl.innerHTML='';
+  for(let i=0;i<G.party.length;i++){
+    const c=G.party[i];
+    const hpPct=c.HP/c.maxHP;
+    const mpPct=c.MP/c.maxMP;
+    const d=document.createElement('div');
+    d.className=`battle-chim${activeIdx===i?' active':''}${c.HP<=0?' dead':''}`;
+    d.dataset.chimIdx=i;
+    const isActive=activeIdx===i;
+    const skillHTML=renderSkillGrid(c,{chimIdx:i,isActive,showAttackGuard:true,target:bs.boss});
+    d.innerHTML=`
+      <div style="width:100%">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="name" style="width:50px">${c.name}</span>
+          <div style="flex:1"><div class="bar-bg" style="height:5px"><div class="bar-fill ${hpPct>.5?'green':hpPct>.25?'yellow':'red'}" style="width:${hpPct*100}%"></div></div><div class="bar-bg" style="height:3px;margin-top:1px"><div class="bar-fill blue" style="width:${mpPct*100}%"></div></div></div>
+          <div style="width:76px;text-align:right;font-size:9px;color:#8b949e;flex-shrink:0;line-height:1.2"><span style="color:#e6edf3">${c.HP}/${c.maxHP}</span><br><span style="color:#58a6ff">${c.MP}/${c.maxMP}</span></div>
+        </div>
+        <div style="font-size:9px;margin-top:3px">${affTableHTML(c.affinities)}</div>
+        <div style="margin-top:2px">${skillHTML}</div>
+      </div>
+    `;
+    partyEl.appendChild(d);
+  }
+  // Log
+  const logEl=document.getElementById('battle-log');
+  logEl.innerHTML=bs.log.slice(-8).map(l=>`<div class="log-entry">${l}</div>`).join('');
+  logEl.scrollTop=logEl.scrollHeight;
+  // Turn info
+  document.getElementById('battle-turn-info').textContent=`Turn ${bs.turn}`;
+  // Targeting panel
+  const tPanel=document.getElementById('bat-target-panel');
+  partyEl.querySelectorAll('.battle-chim').forEach(el=>el.classList.toggle('targetable',!!G.battleState.targeting));
+  if(G.battleState.targeting){
+    const ta=G.party[G.battleState.targeting.chimIdx].abilities[G.battleState.targeting.abilIdx];
+    tPanel.style.display='flex';
+    tPanel.style.alignItems='center';
+    tPanel.style.justifyContent='space-between';
+    tPanel.style.gap='6px';
+    let html=`<span style="font-size:12px;color:#e6edf3">Target: <span style="font-weight:600">${ta.name}</span></span><div style="display:flex;gap:6px">`;
+    if(ta.type==='buff')html+=`<button class="btn primary" id="bat-target-all" style="padding:4px 10px;font-size:11px">All Party</button>`;
+    html+=`<button class="btn" id="bat-target-cancel" style="padding:4px 10px;font-size:11px">Cancel</button></div>`;
+    tPanel.innerHTML=html;
+    const cancelBtn=document.getElementById('bat-target-cancel');
+    if(cancelBtn)cancelBtn.onclick=function(){G.battleState.targeting=null;renderBattle();};
+    const allBtn=document.getElementById('bat-target-all');
+    if(allBtn)allBtn.onclick=function(){executeTargetedSkill(G.battleState.targeting.chimIdx,G.battleState.targeting.abilIdx,-2);};
+    partyEl.style.cursor='pointer';
+    partyEl.onclick=function(e){
+      const cd=e.target.closest('.battle-chim');
+      if(!cd||!G.battleState.targeting)return;
+      const ti=parseInt(cd.dataset.chimIdx);
+      const t=G.party[ti];
+      const ta=G.party[G.battleState.targeting.chimIdx].abilities[G.battleState.targeting.abilIdx];
+      if(t.HP<=0&&ta.type!=='revive')return;
+      executeTargetedSkill(G.battleState.targeting.chimIdx,G.battleState.targeting.abilIdx,ti);
+    };
+  }else{
+    tPanel.style.display='none';
+    partyEl.style.cursor='';
+    partyEl.onclick=null;
+  }
+  // Attach inline action handlers
+  partyEl.querySelectorAll('.bat-skill-btn').forEach(btn=>{
+    if(btn.disabled||G.battleState.targeting)return;
+    btn.addEventListener('click',()=>{
+      const chimIdx=parseInt(btn.dataset.chim);
+      const abilIdx=parseInt(btn.dataset.abil);
+      handleSkillClick(chimIdx,abilIdx);
+    });
+  });
+  partyEl.querySelectorAll('.bat-attack-btn').forEach(btn=>{
+    if(btn.disabled||G.battleState.targeting)return;
+    btn.addEventListener('click',()=>{
+      const chimIdx=parseInt(btn.dataset.chim);
+      doChimAttack(chimIdx);
+      G.battleState.activeChim=null;G.battleState.current++;
+      setTimeout(startNextActor,200);
+    });
+  });
+  partyEl.querySelectorAll('.bat-guard-btn').forEach(btn=>{
+    if(btn.disabled||G.battleState.targeting)return;
+    btn.addEventListener('click',()=>{
+      const chimIdx=parseInt(btn.dataset.chim);
+      G.party[chimIdx].guard=true;
+      battleLog(`${G.party[chimIdx].name} guards.`);
+      G.battleState.activeChim=null;G.battleState.current++;
+      setTimeout(startNextActor,200);
+    });
+  });
+  }catch(e){document.getElementById('battle-party').innerHTML='<div style="padding:10px;color:#da3633">Render error: '+e.message+'</div>';}
+}
+
+function handleSkillClick(chimIdx,abilIdx){
+  const c=G.party[chimIdx];
+  const a=c.abilities[abilIdx];
+  if(c.MP<(a.cost||0))return;
+  if(a.type==='damage'){
+    const isReflect=checkReflect(a);
+    if(isReflect&&!confirm(`${a.name} will be reflected! Continue?`))return;
+    doChimSkill(chimIdx,a);
+    G.battleState.activeChim=null;G.battleState.current++;
+    setTimeout(startNextActor,200);
+  }else if(a.type==='debuff'){
+    doChimSkill(chimIdx,a);
+    G.battleState.activeChim=null;G.battleState.current++;
+    setTimeout(startNextActor,200);
+  }else{
+    // Heal, buff, mpcharge, revive — enter targeting mode
+    G.battleState.targeting={chimIdx,abilIdx};
+    renderBattle();
+  }
+}
+
+function executeTargetedSkill(chimIdx,abilIdx,targetIdx){
+  const c=G.party[chimIdx];
+  const a=c.abilities[abilIdx];
+  if(!a||!c)return;
+  c.MP-=a.cost||0;
+  const boss=G.battleState.boss;
+  
+  if(a.type==='heal'){
+    const heal=Math.round(a.power*(1+c.MAG*0.015));
+    const target=G.party[targetIdx];
+    target.HP=Math.min(target.maxHP,target.HP+heal);
+    battleLog(`${c.name} heals ${target.name} for ${heal}.`);
+  }else if(a.type==='mpcharge'){
+    const target=G.party[targetIdx];
+    target.MP=Math.min(target.maxMP,target.MP+a.restore);
+    battleLog(`${c.name} charges ${target.name} (+${a.restore}MP).`);
+  }else if(a.type==='revive'){
+    const target=G.party[targetIdx];
+    target.HP=Math.round(target.maxHP*a.power/100);
+    target.MP=Math.min(target.maxMP,target.MP+a.mpRestore);
+    battleLog(`${c.name} revives ${target.name} (${target.HP}HP, ${target.MP}MP).`);
+  }else if(a.type==='buff'){
+    const targets=targetIdx===-2?G.party:[G.party[targetIdx]];
+    for(const t of targets){
+      if(!t.buffs)t.buffs=[];
+      const key=a.element?`elem_atk_${a.element}`:a.stat;
+      const ex=t.buffs.find(b=>b.key===key);
+      if(ex){ex.mult=a.mult;ex.duration=a.duration;}
+      else t.buffs.push({key,stat:a.stat||'elem_atk',element:a.element,mult:a.mult,duration:a.duration});
+    }
+    const tName=targetIdx===-2?'the party':G.party[targetIdx].name;
+    const pct=Math.round((a.mult-1)*100);
+    const detail=a.element?`${a.element}(ATK)`:`${a.stat}${a.stat==='ATK'?'(PHY)':a.stat==='MAG'?'(MAG)':a.stat==='DEF'?'(PHY)':'(MAG)'}`;
+    battleLog(`${c.name} uses ${a.name} on ${tName} (${detail} +${pct}% ${a.duration>=999?'∞':a.duration+'t'}).`);
+  }else if(a.type==='debuff'){
+    if(!boss.buffs)boss.buffs=[];
+    const key=a.element?`elem_def_${a.element}`:a.stat;
+    const ex=boss.buffs.find(b=>b.key===key);
+    if(ex){ex.mult=a.mult;ex.duration=a.duration;}
+    else boss.buffs.push({key,stat:a.stat||'elem_def',element:a.element,mult:a.mult,duration:a.duration});
+    const pct=Math.round((a.mult-1)*100);
+    const targ=a.element?`${a.element}(RES)`:`${a.stat}`;
+    battleLog(`${c.name} uses ${a.name} on ${boss.name} (${targ} ${pct}% ${a.duration>=999?'∞':a.duration+'t'}).`);
+  }
+  G.battleState.targeting=null;
+  G.battleState.activeChim=null;G.battleState.current++;
+  checkBattleEnd();
+  if(!G.battleState.finished)setTimeout(startNextActor,200);
+}
+
+function battleLog(msg){G.battleState.log.push(msg);renderBattle();}
+
+function startNextActor(){
+  const bs=G.battleState;
+  if(bs.finished)return;
+  const order=getBattleOrder();
+  // Find current actor
+  if(bs.current>=order.length){
+    // New turn
+    bs.turn++;
+    bs.current=0;
+    // Tick buffs
+    for(const c of G.party)tickBuffs(c);
+    tickBuffs(bs.boss);
+    startNextActor();
+    return;
+  }
+  const actor=order[bs.current];
+  if(actor.type==='boss'){
+    bs.current++;
+    bossAI();
+    if(!bs.finished)setTimeout(startNextActor,500);
+  }else{
+    // Player turn - show menu
+    showChimAction(actor.idx);
+  }
+}
+
+function tickBuffs(entity){
+  if(!entity.buffs)return;
+  entity.buffs=entity.buffs.filter(b=>{
+    if(b.duration>=999)return true;
+    b.duration--;
+    return b.duration>0;
+  });
+}
+
+function getBuffMultiplier(entity,stat){
+  if(!entity.buffs)return 1;
+  for(const b of entity.buffs){
+    if(b.stat===stat)return b.mult;
+  }
+  return 1;
+}
+
+function showChimAction(chimIdx){
+  const c=G.party[chimIdx];
+  G.battleState.activeChim=chimIdx;
+  renderBattle(chimIdx);
+  document.getElementById('battle-turn-info').textContent=`${c.name}'s turn`;
+}
+
+function checkReflect(ability){
+  if(ability.type!=='damage')return false;
+  const boss=G.battleState.boss;
+  const aff=boss.affinities[ability.element];
+  return aff==='rf';
+}
+
+function doChimAttack(chimIdx){
+  const c=G.party[chimIdx];
+  const boss=G.battleState.boss;
+  let defMult=getBuffMultiplier(boss,'DEF');
+  let atkMult=getBuffMultiplier(c,'ATK');
+  const elemAtkBuff=c.buffs?.find(b=>b.element==='PHY');
+  if(elemAtkBuff)atkMult*=elemAtkBuff.mult;
+  const elemDefBuff=boss.buffs?.find(b=>b.element==='PHY');
+  if(elemDefBuff)defMult/=elemDefBuff.mult;
+  let dmg=Math.round(8*(1+c.ATK*0.015)*atkMult/defMult);
+  const aff=boss.affinities['PHY'];
+  if(aff==='wk')dmg=Math.round(dmg*2.5);
+  else if(aff==='rs')dmg=Math.round(dmg*.5);
+  else if(aff==='nl')dmg=0;
+  else if(aff==='rf'){
+    reflectDamage(c,{element:'PHY',power:dmg,type:'damage'},c);
+    return;
+  }
+  boss.HP=Math.max(0,boss.HP-dmg);
+  battleLog(`${c.name} attacks! ${dmg} damage.`);
+  checkBattleEnd();
+}
+
+function doChimSkill(chimIdx,ability){
+  const c=G.party[chimIdx];
+  const boss=G.battleState.boss;
+  c.MP-=ability.cost||0;
+  
+  if(ability.type==='debuff'){
+    if(!boss.buffs)boss.buffs=[];
+    const key=ability.element?`elem_def_${ability.element}`:ability.stat;
+    const ex=boss.buffs.find(b=>b.key===key);
+    if(ex){ex.mult=ability.mult;ex.duration=ability.duration;}
+    else boss.buffs.push({key,stat:ability.stat||'elem_def',element:ability.element,mult:ability.mult,duration:ability.duration});
+    const pct=Math.round((ability.mult-1)*100);
+    const target=ability.element?`${ability.element}(RES)`:`${ability.stat}${ability.stat==='ATK'?'(PHY)':ability.stat==='MAG'?'(MAG)':ability.stat==='DEF'?'(PHY)':'(MAG)'}`;
+    battleLog(`${c.name} uses ${ability.name} on ${boss.name} (${target} ${pct}% ${ability.duration>=999?'∞':ability.duration+'t'}).`);
+  }else{
+    // Damage
+    const isPhysical=ability.element==='PHY';
+    const stat=isPhysical?c.ATK:c.MAG;
+    const defStat=isPhysical?boss.DEF:boss.MDF;
+    let atkMult=getBuffMultiplier(c,isPhysical?'ATK':'MAG');
+    let defMult=getBuffMultiplier(boss,isPhysical?'DEF':'MDF');
+    // Element-specific buff on caster
+    const elemAtkBuff=c.buffs?.find(b=>b.element===ability.element);
+    if(elemAtkBuff)atkMult*=elemAtkBuff.mult;
+    // Element-specific debuff on boss
+    const elemDefBuff=boss.buffs?.find(b=>b.element===ability.element);
+    if(elemDefBuff)defMult*=elemDefBuff.mult;
+    let dmg=Math.round(ability.power*(1+stat*0.015)*atkMult/defMult);
+    const aff=boss.affinities[ability.element];
+    let affMsg='';
+    if(aff==='wk'){dmg=Math.round(dmg*2.5);affMsg=' (Weak!)'}
+    else if(aff==='rs'){dmg=Math.round(dmg*.5);affMsg=' (Resisted)'}
+    else if(aff==='nl'){dmg=0;affMsg=' (Nullified)'}
+    else if(aff==='rf'){
+      reflectDamage(c,ability,c);
+      return;
+    }
+    boss.HP=Math.max(0,boss.HP-dmg);
+    battleLog(`${c.name} uses ${ability.name}${affMsg}: ${dmg} damage.`);
+  }
+  checkBattleEnd();
+}
+
+function reflectDamage(attacker,ability,defender){
+  const isPhysical=ability.element==='PHY';
+  const stat=isPhysical?attacker.ATK:attacker.MAG;
+  let dmg=typeof ability.power==='number'?ability.power:Math.round(8*(1+attacker.ATK*0.015));
+  if(typeof ability.power!=='number')dmg=Math.round(dmg);
+  else dmg=Math.round(ability.power*(1+stat*0.015));
+  const aff=attacker.affinities[ability.element];
+  if(aff==='rf'){battleLog(`Reflect cancels! No damage.`);return;}
+  if(aff==='wk')dmg=Math.round(dmg*2.5);
+  else if(aff==='rs')dmg=Math.round(dmg*.5);
+  else if(aff==='nl')dmg=0;
+  attacker.HP=Math.max(0,attacker.HP-dmg);
+  battleLog(`${ability.name} reflected! ${attacker.name} takes ${dmg} damage.`);
+  checkBattleEnd();
+}
+
+function bossAI(){
+  const bs=G.battleState;
+  const boss=bs.boss;
+  const order=getBattleOrder();
+  const actor=order.find(a=>a.type==='boss');
+  if(!actor){setTimeout(startNextActor,100);return;}
+  
+  // AI decision
+  const r=Math.random();
+  const damageAbils=boss.abilities.filter(a=>a.type==='damage');
+  const buffAbils=boss.abilities.filter(a=>a.type==='buff');
+  const debuffAbils=boss.abilities.filter(a=>a.type==='debuff');
+  const healAbils=boss.abilities.filter(a=>a.type==='heal');
+  const mpAbils=boss.abilities.filter(a=>a.type==='mpcharge');
+  
+  if(r<.15&&buffAbils.length>0){
+    const ab=buffAbils[Math.floor(Math.random()*buffAbils.length)];
+    if(!boss.buffs)boss.buffs=[];
+    const key=ab.element?`elem_atk_${ab.element}`:ab.stat;
+    const ex=boss.buffs.find(b=>b.key===key);
+    if(ex){ex.mult=ab.mult;ex.duration=ab.duration;}
+    else boss.buffs.push({key,stat:ab.stat||'elem_atk',element:ab.element,mult:ab.mult,duration:ab.duration});
+    const det=ab.element?`${ab.element}(ATK)`:`${ab.stat}`;
+    battleLog(`${boss.name} uses ${ab.name} (${det} +${Math.round((ab.mult-1)*100)}%).`);
+  }else if(r<.25&&debuffAbils.length>0){
+    const ab=debuffAbils[Math.floor(Math.random()*debuffAbils.length)];
+    const target=G.party[Math.floor(Math.random()*G.party.length)];
+    if(!target.buffs)target.buffs=[];
+    const key=ab.element?`elem_def_${ab.element}`:ab.stat;
+    const ex=target.buffs.find(b=>b.key===key);
+    if(ex){ex.mult=ab.mult;ex.duration=ab.duration;}
+    else target.buffs.push({key,stat:ab.stat||'elem_def',element:ab.element,mult:ab.mult,duration:ab.duration});
+    const det=ab.element?`${ab.element}(RES)`:`${ab.stat}`;
+    battleLog(`${boss.name} uses ${ab.name} on ${target.name} (${det} ${Math.round((ab.mult-1)*100)}%).`);
+  }else if(r<.35&&healAbils.length>0&&boss.HP<boss.maxHP*0.5){
+    const ab=healAbils[Math.floor(Math.random()*healAbils.length)];
+    const heal=Math.round(ab.power*(1+boss.MAG*0.015));
+    boss.HP=Math.min(boss.maxHP,boss.HP+heal);
+    battleLog(`${boss.name} heals for ${heal}.`);
+  }else if(r<.38&&mpAbils.length>0&&boss.MP<boss.maxMP*0.5){
+    const ab=mpAbils[Math.floor(Math.random()*mpAbils.length)];
+    boss.MP=Math.min(boss.maxMP,boss.MP+ab.restore);
+    boss.MP-=ab.cost||0;
+    battleLog(`${boss.name} charges MP (+${ab.restore}).`);
+  }else if(r<.5||damageAbils.length===0){
+    const target=G.party.reduce((a,b)=>a.HP<a.maxHP?a:b);
+    let atkMult=getBuffMultiplier(boss,'ATK');
+    let defMult=getBuffMultiplier(target,'DEF');
+    const elemAtkBuff=boss.buffs?.find(b=>b.element==='PHY');
+    if(elemAtkBuff)atkMult*=elemAtkBuff.mult;
+    const elemDefBuff=target.buffs?.find(b=>b.element==='PHY');
+    if(elemDefBuff)defMult*=elemDefBuff.mult;
+    let dmg=Math.round(8*(1+boss.ATK*0.015)*atkMult/defMult);
+    const aff=target.affinities['PHY'];
+    if(aff==='wk')dmg=Math.round(dmg*2.5);
+    else if(aff==='rs')dmg=Math.round(dmg*.5);
+    else if(aff==='nl')dmg=0;
+    if(dmg>0&&target.guard)dmg=Math.round(dmg*.5);
+    target.HP=Math.max(0,target.HP-dmg);
+    battleLog(`${boss.name} attacks ${target.name} for ${dmg} damage.`);
+    target.guard=false;
+  }else if(damageAbils.length>0){
+    const ab=damageAbils[Math.floor(Math.random()*damageAbils.length)];
+    const target=G.party.reduce((a,b)=>a.HP<a.maxHP?a:b);
+    const isPhysical=ab.element==='PHY';
+    const stat=isPhysical?boss.ATK:boss.MAG;
+    const defStat=isPhysical?target.DEF:target.MDF;
+    let atkMult=getBuffMultiplier(boss,isPhysical?'ATK':'MAG');
+    let defMult=getBuffMultiplier(target,isPhysical?'DEF':'MDF');
+    const elemAtkBuff=boss.buffs?.find(b=>b.element===ab.element);
+    if(elemAtkBuff)atkMult*=elemAtkBuff.mult;
+    const elemDefBuff=target.buffs?.find(b=>b.element===ab.element);
+    if(elemDefBuff)defMult*=elemDefBuff.mult;
+    let dmg=Math.round(ab.power*(1+stat*0.015)*atkMult/defMult);
+    const aff=target.affinities[ab.element];
+    if(aff==='wk')dmg=Math.round(dmg*2.5);
+    else if(aff==='rs')dmg=Math.round(dmg*.5);
+    else if(aff==='nl')dmg=0;
+    else if(aff==='rf'){
+      reflectDamage(boss,ab,target);
+      return;
+    }
+    if(dmg>0&&target.guard)dmg=Math.round(dmg*.5);
+    target.HP=Math.max(0,target.HP-dmg);
+    boss.MP=Math.max(0,boss.MP-(ab.cost||0));
+    battleLog(`${boss.name} uses ${ab.name} on ${target.name} for ${dmg} damage.`);
+    target.guard=false;
+  }
+  
+  // Guard sometimes
+  if(Math.random()<.1)boss.guard=true;
+  
+  // Reset guards
+  for(const c of G.party)c.guard=false;
+  
+  checkBattleEnd();
+}
+
+function checkBattleEnd(){
+  const bs=G.battleState;
+  const boss=bs.boss;
+  if(boss.HP<=0){
+    bs.finished=true;
+    battleLog(`${boss.name} defeated!`);
+    setTimeout(()=>victory(bs.bossIdx),400);
+    return;
+  }
+  const allDead=G.party.every(c=>c.HP<=0);
+  if(allDead){
+    bs.finished=true;
+    battleLog('All Chim have fallen...');
+    setTimeout(()=>{
+      // Restore party HP/MP
+      for(const c of G.party){c.HP=c.maxHP;c.MP=c.maxMP;c.buffs=[];c.guard=false;}
+      renderBossSelect();
+      showScreen('screen-boss-select');
+    },800);
+    return;
+  }
+  renderBattle();
+}
+
+// ─── VICTORY ───
+function victory(bossIdx){
+  const boss=G.bosses[bossIdx];
+  G.vicBoss=boss;
+  G.defeatedBosses++;
+  
+  // XP
+  const xpGain=20+boss.level*10;
+  let leveledUp=false;
+  for(const c of G.party){
+    if(c.HP<=0)continue;
+    c.xp+=xpGain;
+    while(c.xp>=c.xpNext){
+      c.xp-=c.xpNext;
+      c.level++;
+      c.unspent+=4;
+      c.xpNext=20+c.level*8;
+      // Auto stat gain
+      c.maxHP+=5;c.HP+=5;
+      c.maxMP+=3;c.MP+=3;
+      c.ATK+=1;c.MAG+=1;c.DEF+=1;c.MDF+=1;c.SPD+=1;
+      leveledUp=true;
+    }
+  }
+  
+  const vicEl=document.getElementById('screen-victory');
+  document.getElementById('vic-boss-name').textContent=`${boss.name} Lv${boss.level} defeated!`;
+  
+  // Level ups
+  const lvDiv=document.getElementById('vic-level-ups');
+  if(leveledUp){
+    const lvList=G.party.filter(c=>c.unspent>0).map(c=>`<div style="font-size:12px;color:#d29922">${c.name} reached Lv${c.level}! (+${c.unspent} pts)</div>`).join('');
+    lvDiv.innerHTML=`<div style="font-size:13px;margin-bottom:4px;color:#2ea043">Level Up!</div>${lvList}`;
+  }else lvDiv.innerHTML='';
+  
+  // Show 5 Chim (4 party + boss)
+  const bossChim=createChim(boss.level,{
+    name:boss.name,
+    abilities:boss.abilities,
+    affinities:boss.affinities,
+    assigned:{},
+    unspent:0,
+  });
+  const five=[...G.party,bossChim];
+  const grid5=document.getElementById('vic-5-chim');
+  grid5.innerHTML='';
+  for(const c of five){
+    const d=document.createElement('div');
+    d.className='card chim-card';
+    const sg=renderSkillGrid(c,{showAttackGuard:true});
+    d.innerHTML=`<div class="name">${c.name} Lv${c.level}</div><div class="stats">HP ${c.HP}/${c.maxHP} · MP ${c.MP}/${c.maxMP}</div>${sg}`;
+    grid5.appendChild(d);
+  }
+  
+  // Buttons
+  document.getElementById('vic-fuse').onclick=()=>{
+    G.fusionState={chim:five,boss:bossChim};
+    openFusion(five,bossChim);
+  };
+  document.getElementById('vic-abandon').onclick=()=>{
+    openAbandon(five,bossChim);
+  };
+  
+  showScreen('screen-victory');
+}
+
+// ─── FUSION ───
+let fusionSelected=[];
+
+function openFusion(chimer,bossChim){
+  fusionSelected=[];
+  const grid=document.getElementById('fusion-grid');
+  grid.innerHTML='';
+  for(let i=0;i<chimer.length;i++){
+    const c=chimer[i];
+    const d=document.createElement('div');
+    d.className='card chim-card';
+    d.dataset.idx=i;
+    d.innerHTML=`<div class="name">${c.name} Lv${c.level}</div><div class="stats">HP ${c.HP}/${c.maxHP} · MP ${c.MP}/${c.maxMP}<br>ATK ${c.ATK} MAG ${c.MAG} DEF ${c.DEF} MDF ${c.MDF} SPD ${c.SPD}</div>`;
+    d.addEventListener('click',()=>toggleFusionSelect(i,d));
+    grid.appendChild(d);
+  }
+  document.getElementById('fusion-preview').style.display='none';
+  document.getElementById('fusion-confirm').disabled=true;
+  showScreen('screen-fusion');
+}
+
+function toggleFusionSelect(idx,el){
+  const pos=fusionSelected.indexOf(idx);
+  if(pos>=0){fusionSelected.splice(pos,1);el.style.borderColor='#21262d';}
+  else{
+    if(fusionSelected.length>=2)return;
+    fusionSelected.push(idx);
+    el.style.borderColor='#388bfd';
+  }
+  if(fusionSelected.length===2)showFusionPreview();
+  else{document.getElementById('fusion-preview').style.display='none';document.getElementById('fusion-confirm').disabled=true;}
+}
+
+function showFusionPreview(){
+  const fs=G.fusionState;
+  const a=fs.chim[fusionSelected[0]];
+  const b=fs.chim[fusionSelected[1]];
+  const avgLv=Math.round((a.level+b.level)/2)+1;
+  const recovered=Math.round((Object.values(a.assigned).reduce((s,v)=>s+v,0)+Object.values(b.assigned).reduce((s,v)=>s+v,0))*0.5);
+  
+  // Stats
+  const resultHP=Math.round((a.maxHP+b.maxHP)/2*0.8)+10;
+  const resultMP=Math.round((a.maxMP+b.maxMP)/2*0.8)+5;
+  const resultATK=Math.round((a.ATK+b.ATK)/2*0.8)+2;
+  const resultMAG=Math.round((a.MAG+b.MAG)/2*0.8)+2;
+  const resultDEF=Math.round((a.DEF+b.DEF)/2*0.8)+1;
+  const resultMDF=Math.round((a.MDF+b.MDF)/2*0.8)+1;
+  const resultSPD=Math.round((a.SPD+b.SPD)/2*0.8)+1;
+  
+  // Combined abilities
+  const pool=[];
+  const seen=new Set();
+  for(const ab of[...a.abilities,...b.abilities]){
+    if(!seen.has(ab.name)){seen.add(ab.name);pool.push(ab);}
+  }
+  
+  G.fusionState.preview={a,b,avgLv,recovered,resultHP,resultMP,resultATK,resultMAG,resultDEF,resultMDF,resultSPD,pool};
+  G.fusionState.selectedAbilities=pool.slice(0,8).map(ab=>ab.name);
+  
+  const card=document.getElementById('fusion-result-card');
+  card.innerHTML=`
+    <div style="font-weight:600;font-size:14px;margin-bottom:6px">${a.name} + ${b.name} → Lv ${avgLv}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;font-size:11px;margin:4px 0">
+      <div style="color:#8b949e">Stat</div><div style="color:#8b949e">Avg</div><div style="color:#2ea043">Result</div>
+      <div>HP</div><div>${Math.round((a.maxHP+b.maxHP)/2)}</div><div>${resultHP}</div>
+      <div>MP</div><div>${Math.round((a.maxMP+b.maxMP)/2)}</div><div>${resultMP}</div>
+      <div>ATK</div><div>${Math.round((a.ATK+b.ATK)/2)}</div><div>${resultATK}</div>
+      <div>MAG</div><div>${Math.round((a.MAG+b.MAG)/2)}</div><div>${resultMAG}</div>
+      <div>DEF</div><div>${Math.round((a.DEF+b.DEF)/2)}</div><div>${resultDEF}</div>
+      <div>MDF</div><div>${Math.round((a.MDF+b.MDF)/2)}</div><div>${resultMDF}</div>
+      <div>SPD</div><div>${Math.round((a.SPD+b.SPD)/2)}</div><div>${resultSPD}</div>
+    </div>
+    <div style="font-size:11px;color:#d29922">Recovered: ${recovered} stat points to redistribute</div>
+  `;
+  
+  // Ability selection
+  const abDiv=document.getElementById('fusion-abilities');
+  abDiv.innerHTML='<div id="fusion-ab-count" style="font-size:11px;color:#8b949e;width:100%;margin-bottom:4px">0 / 8 selected</div>';
+  for(const ab of pool){
+    const tag=document.createElement('span');
+    tag.innerHTML=abTagHTML(ab);
+    tag.style.cssText='cursor:pointer;transition:.1s;display:inline-flex';
+    tag.firstChild.style.border='2px solid #388bfd';
+    tag.addEventListener('click',()=>{
+      const idx=G.fusionState.selectedAbilities.indexOf(ab.name);
+      if(idx>=0){
+        G.fusionState.selectedAbilities.splice(idx,1);
+        tag.firstChild.style.border='1px solid #30363d';
+        tag.firstChild.style.opacity='.5';
+      }else{
+        if(G.fusionState.selectedAbilities.length>=8)return;
+        G.fusionState.selectedAbilities.push(ab.name);
+        tag.firstChild.style.border='2px solid #388bfd';
+        tag.firstChild.style.opacity='1';
+      }
+      document.getElementById('fusion-ab-count').textContent=`${G.fusionState.selectedAbilities.length} / 8 selected`;
+      document.getElementById('fusion-confirm').disabled=G.fusionState.selectedAbilities.length===0;
+    });
+    abDiv.appendChild(tag);
+  }
+  
+  document.getElementById('fusion-preview').style.display='block';
+  document.getElementById('fusion-confirm').disabled=false;
+}
+
+document.getElementById('fusion-confirm').addEventListener('click',()=>{
+  const fs=G.fusionState;
+  const pv=fs.preview;
+  const selAbs=pv.pool.filter(ab=>G.fusionState.selectedAbilities.includes(ab.name));
+  
+  // Create new Chim
+  const assign={};
+  const name=genChimName();
+  const chim=createChim(pv.avgLv,{
+    name,
+    abilities:selAbs,
+    affinities:combineAffinities(pv.a.affinities,pv.b.affinities),
+    assigned:assign,
+    unspent:pv.recovered,
+  });
+  
+  // Replace party: remove the 2 fused, add the new one
+  const newParty=G.party.filter((c,i)=>i!==fusionSelected[0]&&i!==fusionSelected[1]);
+  newParty.push(chim);
+  G.party=newParty;
+  
+  // Replace defeated boss with slightly harder one
+  updateTotalLevel();
+  const oldMult=DIFF_LEVELS[G.battleState.bossIdx].mult;
+  G.bosses[G.battleState.bossIdx]=genBoss(G.totalLevel,Math.min(oldMult+0.15,3));
+  
+  // Full HP/MP for party
+  for(const c of G.party){c.HP=c.maxHP;c.MP=c.maxMP;c.buffs=[];c.guard=false;}
+  
+  renderBossSelect();
+  showScreen('screen-boss-select');
+});
+
+document.getElementById('fusion-cancel').addEventListener('click',()=>{
+  // Go back to victory
+  const boss=G.vicBoss;
+  const bossChim=createChim(boss.level,{name:boss.name,abilities:boss.abilities,affinities:boss.affinities,assigned:{},unspent:0});
+  G.fusionState={chim:[...G.party,bossChim],boss:bossChim};
+  showScreen('screen-victory');
+});
+
+function combineAffinities(a,b){
+  const r={}; for(const el of ELEMENTS)r[el]='ne';
+  const byType={wk:[],rs:[],nl:[],rf:[]};
+  for(const el of ELEMENTS){
+    if(a[el]&&a[el]!=='ne'&&!byType[a[el]].includes(el))byType[a[el]].push(el);
+    if(b[el]&&b[el]!=='ne'&&!byType[b[el]].includes(el))byType[b[el]].push(el);
+  }
+  const pick=(arr)=>{if(!arr.length)return null;return arr[Math.floor(Math.random()*arr.length)];};
+  const occupy=(el,type)=>{if(!el)return;r[el]=type;for(const t of['wk','rs','nl','rf']){byType[t]=byType[t].filter(e=>e!==el);}};
+  const pickDiff=(arr,excl)=>{const f=arr.filter(e=>e!==excl);return f.length?f[Math.floor(Math.random()*f.length)]:null;};
+  // 1 wk from any parent
+  const wkEl=pick(byType.wk);
+  occupy(wkEl,'wk');
+  // 1 rs from any parent, different element
+  const rsEl=pickDiff(byType.rs,wkEl)||pick(byType.rs);
+  occupy(rsEl,'rs');
+  // 3rd modifier: nl or rf
+  const a3=Object.values(a).some(v=>v==='nl'||v==='rf');
+  const b3=Object.values(b).some(v=>v==='nl'||v==='rf');
+  if(a3&&b3||(a3||b3)&&Math.random()<.5){
+    const avail=['nl','rf'].filter(t=>byType[t].length>0);
+    if(avail.length){
+      const t=avail[Math.floor(Math.random()*avail.length)];
+      const el=pick(byType[t]);
+      if(el)occupy(el,t);
+    }
+  }
+  return r;
+}
+
+// ─── ABANDON ───
+function openAbandon(chimer,bossChim){
+  const grid=document.getElementById('abandon-grid');
+  grid.innerHTML='';
+  G.fusionState={chim:chimer,boss:bossChim};
+  G.fusionState.abandonIdx=-1;
+  for(let i=0;i<chimer.length;i++){
+    const c=chimer[i];
+    const d=document.createElement('div');
+    d.className='card chim-card';
+    d.dataset.idx=i;
+    d.innerHTML=`<div class="name">${c.name} Lv${c.level}</div><div class="stats">HP ${c.HP}/${c.maxHP} · MP ${c.MP}/${c.maxMP}<br>ATK ${c.ATK} MAG ${c.MAG} DEF ${c.DEF} MDF ${c.MDF} SPD ${c.SPD}</div>`;
+    d.addEventListener('click',()=>{
+      G.fusionState.abandonIdx=i;
+      grid.querySelectorAll('.card').forEach(el=>el.style.borderColor='#21262d');
+      d.style.borderColor='#a62a2a';
+      document.getElementById('abandon-confirm').disabled=false;
+    });
+    grid.appendChild(d);
+  }
+  document.getElementById('abandon-confirm').disabled=true;
+  showScreen('screen-abandon');
+}
+
+document.getElementById('abandon-confirm').addEventListener('click',()=>{
+  const idx=G.fusionState.abandonIdx;
+  if(idx<0)return;
+  // Remove that Chim (if it's the boss, drop it; if it's a party member, drop it)
+  const newParty=G.fusionState.chim.filter((c,i)=>i!==idx);
+  G.party=newParty;
+  
+  // Replace defeated boss with slightly harder one
+  updateTotalLevel();
+  const oldMultAb=DIFF_LEVELS[G.battleState.bossIdx].mult;
+  G.bosses[G.battleState.bossIdx]=genBoss(G.totalLevel,Math.min(oldMultAb+0.15,3));
+  
+  // Restore HP/MP
+  for(const c of G.party){c.HP=c.maxHP;c.MP=c.maxMP;c.buffs=[];c.guard=false;}
+  
+  renderBossSelect();
+  showScreen('screen-boss-select');
+});
+
+document.getElementById('abandon-cancel').addEventListener('click',()=>{
+  const boss=G.vicBoss;
+  const bossChim=createChim(boss.level,{name:boss.name,abilities:boss.abilities,affinities:boss.affinities,assigned:{},unspent:0});
+  G.fusionState={chim:[...G.party,bossChim],boss:bossChim};
+  showScreen('screen-victory');
+});
+
+// ─── MANAGE ───
+document.getElementById('btn-manage').addEventListener('click',()=>{renderManage();showScreen('screen-manage')});
+document.getElementById('manage-back').addEventListener('click',()=>{renderBossSelect();showScreen('screen-boss-select')});
+
+let manageChimIdx=0;
+
+function renderManage(){
+  const list=document.getElementById('manage-list');
+  list.innerHTML='';
+  for(let i=0;i<G.party.length;i++){
+    const c=G.party[i];
+    const card=document.createElement('div');
+    card.className='card';
+    card.id=`manage-${i}`;
+    renderChimManageCard(c,i,card);
+    list.appendChild(card);
+  }
+}
+
+function renderChimManageCard(c,i,card){
+  const abHTML=renderSkillGrid(c,{showAttackGuard:true});
+  const affHTML=affTableHTML(c.affinities);
+  let statHTML='';
+  if(c.unspent>0){
+    const stats=['HP','MP','ATK','MAG','DEF','MDF','SPD'];
+    statHTML='<div style="margin-top:6px;padding-top:6px;border-top:1px solid #21262d">';
+    statHTML+=`<div style="font-size:11px;color:#d29922;margin-bottom:4px">${c.unspent} unspent points</div>`;
+    for(const s of stats){
+      const displayVal=s==='HP'?c.maxHP:s==='MP'?c.maxMP:c[s];
+      statHTML+=`<div class="stat-row"><label>${s}</label><span class="stat-val">${displayVal}</span><button class="stat-btn" data-chim="${i}" data-stat="${s}" ${c.unspent<=0?'disabled':''}>+</button></div>`;
+    }
+    statHTML+='</div>';
+  }
+  const upDisabled=i===0?'opacity:.3;pointer-events:none':'';
+  const downDisabled=i===G.party.length-1?'opacity:.3;pointer-events:none':'';
+  card.innerHTML=`
+    <div style="display:flex;gap:6px">
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;padding-top:2px">
+        <button class="btn-order-up" style="padding:2px 6px;font-size:12px;border:none;border-radius:3px;background:#21262d;color:#e6edf3;cursor:pointer;${upDisabled}" data-chim="${i}">▲</button>
+        <button class="btn-order-down" style="padding:2px 6px;font-size:12px;border:none;border-radius:3px;background:#21262d;color:#e6edf3;cursor:pointer;${downDisabled}" data-chim="${i}">▼</button>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between"><span class="name">${c.name}</span><span style="font-size:12px;color:#8b949e">Lv ${c.level}</span></div>
+        <div class="stats">HP ${c.maxHP} · MP ${c.maxMP} · ATK ${c.ATK} · MAG ${c.MAG} · DEF ${c.DEF} · MDF ${c.MDF} · SPD ${c.SPD}</div>
+        <div style="margin-top:4px">${affHTML}</div>
+        ${abHTML}
+        ${statHTML}
+      </div>
+    </div>
+  `;
+  // Order buttons
+  card.querySelector('.btn-order-up')?.addEventListener('click',()=>{moveChim(i,i-1)});
+  card.querySelector('.btn-order-down')?.addEventListener('click',()=>{moveChim(i,i+1)});
+  // Stat buttons
+  if(c.unspent>0){
+    card.querySelectorAll('.stat-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const chimIdx=parseInt(btn.dataset.chim);
+        const stat=btn.dataset.stat;
+        const chim=G.party[chimIdx];
+        if(chim.unspent<=0)return;
+        chim.unspent--;
+        if(stat==='HP'){chim.maxHP+=4;chim.HP+=4;}
+        else if(stat==='MP'){chim.maxMP+=2;chim.MP+=2;}
+        else{chim[stat]++;}
+        chim.assigned[stat]=(chim.assigned[stat]||0)+1;
+        renderChimManageCard(chim,chimIdx,card);
+      });
+    });
+  }
+}
+
+function moveChim(from,to){
+  if(to<0||to>=G.party.length)return;
+  const arr=G.party;
+  [arr[from],arr[to]]=[arr[to],arr[from]];
+  renderManage();
+}
+
+// ─── REGENERATE ───
+document.getElementById('btn-regenerate').addEventListener('click',()=>{
+  if(confirm('Regenerate all bosses? Current unbeaten bosses will be replaced.')){
+    generateBosses();
+    renderBossSelect();
+  }
+});
+
+// ─── SAVE / LOAD ───
+document.getElementById('btn-save').addEventListener('click',()=>{renderSaveLoad();showScreen('screen-save')});
+document.getElementById('save-back').addEventListener('click',()=>{renderBossSelect();showScreen('screen-boss-select')});
+
+function renderSaveLoad(){
+  const grid=document.getElementById('save-grid');
+  grid.innerHTML='';
+  for(let i=0;i<10;i++){
+    const raw=localStorage.getItem(`chimeric_save_${i}`);
+    const data=raw?JSON.parse(raw):null;
+    const card=document.createElement('div');
+    card.className='card';
+    card.style.padding='10px';
+    if(data){
+      const d=new Date(data.timestamp);
+      const dateStr=`${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+      const avgLv=Math.round(data.party.reduce((s,c)=>s+c.level,0)/data.party.length);
+      card.innerHTML=`
+        <div style="font-weight:600;font-size:13px">Slot ${i+1}</div>
+        <div style="font-size:11px;color:#8b949e">${dateStr} · Lv ${avgLv} · ${data.defeatedBosses} wins</div>
+        <div style="display:flex;gap:4px;margin-top:6px">
+          <button class="btn" style="flex:1;padding:6px" id="save-load-${i}">Load</button>
+          <button class="btn warning" style="flex:1;padding:6px" id="save-over-${i}">Save</button>
+        </div>
+      `;
+    }else{
+      card.innerHTML=`
+        <div style="font-weight:600;font-size:13px;color:#8b949e">Slot ${i+1} — Empty</div>
+        <div style="margin-top:6px">
+          <button class="btn primary" style="width:100%;padding:6px" id="save-new-${i}">Save</button>
+        </div>
+      `;
+    }
+    grid.appendChild(card);
+    // Attach listeners after render
+    if(data){
+      document.getElementById(`save-load-${i}`).addEventListener('click',()=>loadGame(i));
+      document.getElementById(`save-over-${i}`).addEventListener('click',()=>{saveGame(i);renderSaveLoad()});
+    }else{
+      document.getElementById(`save-new-${i}`).addEventListener('click',()=>{saveGame(i);renderSaveLoad()});
+    }
+  }
+}
+
+function saveGame(slot){
+  const saveData={
+    nextId,
+    party:G.party,
+    bosses:G.bosses,
+    defeatedBosses:G.defeatedBosses,
+    totalLevel:G.totalLevel,
+    timestamp:Date.now()
+  };
+  localStorage.setItem(`chimeric_save_${slot}`,JSON.stringify(saveData));
+}
+
+function loadGame(slot){
+  const raw=localStorage.getItem(`chimeric_save_${slot}`);
+  if(!raw){alert('Save slot empty.');return;}
+  const data=JSON.parse(raw);
+  nextId=data.nextId;
+  G.party=data.party;
+  G.bosses=data.bosses;
+  G.defeatedBosses=data.defeatedBosses;
+  G.totalLevel=data.totalLevel;
+  G.battleState=null;
+  G.fusionState=null;
+  G.vicBoss=null;
+  for(const c of G.party){c.HP=c.maxHP;c.MP=c.maxMP;c.buffs=[];c.guard=false;}
+  renderBossSelect();
+  showScreen('screen-boss-select');
+}
+
+// ─── ANDROID BACK BUTTON ───
+function handleBack(){
+  const id=document.querySelector('.screen.active')?.id;
+  if(!id)return;
+  if(id==='screen-study')document.getElementById('study-back').click();
+  else if(id==='screen-manage')document.getElementById('manage-back').click();
+  else if(id==='screen-save')document.getElementById('save-back').click();
+  else if(id==='screen-battle'&&G.battleState&&!G.battleState.targeting){
+    if(confirm('Flee the battle?')){
+      G.battleState.finished=true;
+      G.battleState=null;
+      for(const c of G.party){c.HP=c.maxHP;c.MP=c.maxMP;c.buffs=[];c.guard=false;}
+      renderBossSelect();
+      showScreen('screen-boss-select');
+    }
+  }
+}
+document.addEventListener('backbutton',handleBack);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();handleBack();}});
+window.addEventListener('popstate',function(){history.pushState({},'');handleBack();});
+// Push initial state
+history.pushState({},'');
+
+// ─── SERVICE WORKER ───
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+
+// ─── START ───
+startGame();
+</script>
+</body>
+</html>
